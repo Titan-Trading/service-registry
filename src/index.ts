@@ -36,7 +36,7 @@ const serviceRegistryTopic = 'service-registry';
             serviceId,
             supportedCommunicationChannels: ['rest', 'bus'],
             hostname: 'registry-proxy',
-            port: 8081,
+            port: 8000,
             endpoints: [
                 {
                     url: '/services',
