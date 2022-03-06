@@ -1,15 +1,4 @@
 
-
-
-// get route registry data 
-
-// set up middleware for converting rest requests to message sagas
-    // listens on message queue for responses
-    // send 404 when there's no mapping found
-    // manage time-outs
-
-// listens on message queue for route registry updates
-
 require('dotenv').config();
 
 import MessageBus from './bus/MessageBus';
@@ -42,7 +31,8 @@ const serviceRegistryTopic = 'service-registry';
                     url: '/services',
                     method: 'get'
                 }
-            ]
+            ],
+            commands: []
         });
     });
 
@@ -56,35 +46,20 @@ const serviceRegistryTopic = 'service-registry';
         console.log(data.messageType.toLowerCase() + ' (message bus)', data);
 
         if(data.messageType == 'EVENT' && data.eventId == 'SERVICE_ONLINE') {
-
             services.addInstance(data.serviceId, {
                 instanceId: data.instanceId,
                 supportedCommunicationChannels: data.supportedCommunicationChannels,
                 hostname: data.hostname,
                 port: data.port,
                 endpoints: data.endpoints,
+                commands: data.commands,
                 status: 'online'
             });
-
-            // data.responseCode = 200;
-            // data.response = {};
-
-            // // reply to outgoing message channel
-            // messageBus.sendMessage(serviceRegistryTopic, data);
         }
         else if(data.messageType == 'EVENT' && data.eventId == 'SERVICE_OFFLINE') {
-            
             services.updateInstance(data.instanceId, {
                 status: 'offline'
             });
-
-            // data.responseCode = 200;
-            // data.response = {};
-
-            // // console.log('services updated (offline): ', await services.getAll());
-
-            // // reply to outgoing message channel
-            // messageBus.sendMessage(serviceRegistryTopic, data);
         }
         else if((data.messageType == 'QUERY' && data.queryId == 'SERVICE_LIST') || (data.messageType == 'REQUEST' && data.routeId && data.routeId == 'get-/services')) {
             data.messageType = 'RESPONSE';

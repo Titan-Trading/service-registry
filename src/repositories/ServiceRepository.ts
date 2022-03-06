@@ -2,10 +2,12 @@ import db from '../../models/index';
 import ServiceFactory from '../../models/service';
 import ServiceInstanceFactory from '../../models/serviceinstance';
 import EndpointFactory from '../../models/endpoint';
+import CommandFactory from '../../models/command';
 
 const Service = ServiceFactory(db.sequelize);
 const ServiceInstance = ServiceInstanceFactory(db.sequelize);
 const Endpoint = EndpointFactory(db.sequelize);
+const Command = CommandFactory(db.sequelize);
 
 export default class ServiceRepository
 {
@@ -29,6 +31,7 @@ export default class ServiceRepository
             return false;
         }
         
+        // service find or create
         const foundServices = await Service.findAll({
             where: {
                 name: serviceId
@@ -48,6 +51,7 @@ export default class ServiceRepository
             service = foundServices[0];
         }
 
+        // service instance find or create
         const foundInstances = await ServiceInstance.count({
             where: {
                 serviceId: service.id,
@@ -67,27 +71,49 @@ export default class ServiceRepository
             status: serviceInstance.status
         });
 
-        if(!serviceInstance.endpoints) {
-            return true;
+        // service endpoints
+        if(serviceInstance.endpoints) {
+            for(let iE in serviceInstance.endpoints) {
+                const ep = serviceInstance.endpoints[iE];
+    
+                const foundEndpoints = await Endpoint.count({
+                    where: {
+                        serviceId: service.id,
+                        url: ep.url,
+                        method: ep.method
+                    }
+                });
+    
+                if(!foundEndpoints) {
+                    await Endpoint.create({
+                        serviceId: service.id,
+                        url: ep.url,
+                        method: ep.method
+                    });
+                }
+            }
         }
 
-        for(let iE in serviceInstance.endpoints) {
-            const ep = serviceInstance.endpoints[iE];
-
-            const foundEndpoints = await Endpoint.count({
-                where: {
-                    serviceId: service.id,
-                    url: ep.url,
-                    method: ep.method
-                }
-            });
-
-            if(!foundEndpoints) {
-                await Endpoint.create({
-                    serviceId: service.id,
-                    url: ep.url,
-                    method: ep.method
+        // service commands
+        if(serviceInstance.commands) {
+            for(let iC in serviceInstance.commands) {
+                const com = serviceInstance.commands[iC];
+    
+                const foundCommands = await Command.count({
+                    where: {
+                        serviceId: service.id,
+                        category: com.category,
+                        type: com.type
+                    }
                 });
+    
+                if(!foundCommands) {
+                    await Command.create({
+                        serviceId: service.id,
+                        category: com.category,
+                        type: com.type
+                    });
+                }
             }
         }
 

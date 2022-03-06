@@ -3,6 +3,7 @@
 const {Sequelize, Model} = require('sequelize');
 const ServiceInstanceFactory = require('./serviceinstance');
 const EndpointFactory = require('./endpoint');
+const CommandFactory = require('./command');
 
 module.exports = (sequelize) => {
     class Service extends Model {
@@ -60,6 +61,7 @@ module.exports = (sequelize) => {
 
     const ServiceInstance = ServiceInstanceFactory(sequelize);
     const Endpoint = EndpointFactory(sequelize);
+    const Command = CommandFactory(sequelize);
 
     Service.hasMany(ServiceInstance, {
         as: 'instances',
@@ -68,6 +70,11 @@ module.exports = (sequelize) => {
 
     Service.hasMany(Endpoint, {
         as: 'endpoints',
+        foreignKey: { name: 'serviceId', allowNull: false }
+    });
+
+    Service.hasMany(Command, {
+        as: 'commands',
         foreignKey: { name: 'serviceId', allowNull: false }
     });
 
