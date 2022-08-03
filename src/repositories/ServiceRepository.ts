@@ -120,10 +120,10 @@ export default class ServiceRepository
         return true;
     }
 
-    async updateInstance(instanceId, serviceInstance)
+    async updateInstance(instanceId, updatedServiceInstance)
     {
         await ServiceInstance.update({
-            status: serviceInstance.status
+            status: updatedServiceInstance.status
         }, {
             where: {
                 instance_id: instanceId

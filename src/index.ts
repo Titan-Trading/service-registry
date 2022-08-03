@@ -66,7 +66,7 @@ const serviceRegistryTopic = 'service-registry';
             data.responseCode = 200;
             data.response = await services.getAll();
 
-            // console.log('get all services', data.response);
+            // console.log('get all services', data.messageType + ' ' + data.queryId);
 
             // reply to outgoing message channel
             messageBus.sendMessage(serviceRegistryTopic, data);
