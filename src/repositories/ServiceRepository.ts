@@ -25,9 +25,9 @@ export default class ServiceRepository
         return services;
     }
 
-    async addInstance(serviceId, serviceInstance)
+    async addInstance(serviceId, serviceInstanceData)
     {
-        if(!serviceId || !serviceInstance) {
+        if(!serviceId || !serviceInstanceData) {
             return false;
         }
         
@@ -42,9 +42,9 @@ export default class ServiceRepository
         if(!foundServices.length) {
             service = await Service.create({
                 name: serviceId,
-                supportedCommunicationChannels: serviceInstance.supportedCommunicationChannels,
-                hostname: serviceInstance.hostname,
-                port: serviceInstance.port
+                supportedCommunicationChannels: serviceInstanceData.supportedCommunicationChannels,
+                hostname: serviceInstanceData.hostname,
+                port: serviceInstanceData.port
             });
         }
         else {
@@ -56,25 +56,35 @@ export default class ServiceRepository
             where: {
                 serviceId: service.id,
                 serviceName: service.name,
-                instanceId: serviceInstance.instanceId
+                instanceId: serviceInstanceData.instanceId
             }
         });
         
-        if(foundInstances) {
-            return false;
+        let serviceInstance = null;
+        if(!foundInstances) {
+            serviceInstance = await ServiceInstance.create({
+                serviceId: service.id,
+                serviceName: service.name,
+                instanceId: serviceInstanceData.instanceId,
+                status: serviceInstanceData.status
+            });
+        }
+        else {
+            serviceInstance = foundInstances[0];
         }
 
-        await ServiceInstance.create({
-            serviceId: service.id,
-            serviceName: service.name,
-            instanceId: serviceInstance.instanceId,
-            status: serviceInstance.status
-        });
-
         // service endpoints
-        if(serviceInstance.endpoints) {
-            for(let iE in serviceInstance.endpoints) {
-                const ep = serviceInstance.endpoints[iE];
+        if(serviceInstanceData.endpoints) {
+
+            // delete all the endpoints
+            const deleteEndpoints = await Endpoint.destroy({
+                where: {
+                    serviceId: service.id
+                }
+            });
+
+            for(let iE in serviceInstanceData.endpoints) {
+                const ep = serviceInstanceData.endpoints[iE];
     
                 const foundEndpoints = await Endpoint.count({
                     where: {
@@ -95,9 +105,17 @@ export default class ServiceRepository
         }
 
         // service commands
-        if(serviceInstance.commands) {
-            for(let iC in serviceInstance.commands) {
-                const com = serviceInstance.commands[iC];
+        if(serviceInstanceData.commands) {
+
+            // delete all the commands
+            const deleteCommands = await Command.destroy({
+                where: {
+                    serviceId: service.id
+                }
+            });
+
+            for(let iC in serviceInstanceData.commands) {
+                const com = serviceInstanceData.commands[iC];
     
                 const foundCommands = await Command.count({
                     where: {
@@ -120,7 +138,7 @@ export default class ServiceRepository
         return true;
     }
 
-    async updateInstance(instanceId, updatedServiceInstance)
+    async updateInstanceStatus(instanceId, updatedServiceInstance)
     {
         await ServiceInstance.update({
             status: updatedServiceInstance.status

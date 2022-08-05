@@ -57,7 +57,7 @@ const serviceRegistryTopic = 'service-registry';
             });
         }
         else if(data.messageType == 'EVENT' && data.eventId == 'SERVICE_OFFLINE') {
-            services.updateInstance(data.instanceId, {
+            services.updateInstanceStatus(data.instanceId, {
                 status: 'offline'
             });
         }
