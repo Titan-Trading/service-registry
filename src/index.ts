@@ -1,8 +1,8 @@
 
 require('dotenv').config();
 
-import MessageBus from './bus/MessageBus';
-import HttpServer from './HttpServer';
+import MessageBus from './utilities/MessageBus';
+import HttpServer from './utilities/HttpServer';
 import ServiceRepository from './repositories/ServiceRepository';
 
 const messageBus = new MessageBus(process.env.CLIENT_ID, process.env.GROUP_ID, [process.env.KAFKA_BOOTSTRAP_SERVER]);
@@ -15,7 +15,6 @@ const instanceId = process.env.INSTANCE_ID;
 const serviceRegistryTopic = 'service-registry';
 
 (async () => {
-
     // connect to message bus
     messageBus.connect().then(() => {
         // let the service registry know that a new micro-service is online
@@ -75,10 +74,6 @@ const serviceRegistryTopic = 'service-registry';
 
     // when a request is sent to the HTTP server
     restServer.on('get', '/services', async (req, res) => {
-        console.log('got a request');
-        console.log('perform transaction on personal database');
-        console.log('send reply');
-
         const allServices = await services.getAll();
 
         return res.status(200).json(allServices);
@@ -91,7 +86,7 @@ const serviceRegistryTopic = 'service-registry';
 /**
  * Closed on error/generic
  */
- process.on('SIGTERM', async () => {
+process.on('SIGTERM', async () => {
     console.info('SIGTERM signal received.');
 
     // let the service registry know that a micro-service is offline

@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     hostname: registry-1
     container_name: registry-1
-    restart: unless-stopped
+    restart: always
     depends_on:
       - service-db
       - registry-migration
@@ -34,14 +34,14 @@ services:
       - app:/var/www
     command:
       - yarn
-      - start-dev
+      - start
   registry-2:
     build:
       context: ./
       dockerfile: Dockerfile
     hostname: registry-2
     container_name: registry-2
-    restart: unless-stopped
+    restart: always
     depends_on:
       - service-db
       - registry-migration
@@ -52,7 +52,7 @@ services:
       - app:/var/www
     command:
       - yarn
-      - start-dev
+      - start
   registry-migration:
     build:
       context: ./
