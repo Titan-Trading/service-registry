@@ -1,5 +1,5 @@
 {
-  "name": "st-api-gateway",
+  "name": "st-service-registry",
   "version": "1.0.0",
   "main": "dist/index.js",
   "license": "MIT",
