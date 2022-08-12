@@ -10,13 +10,13 @@ import { sleep } from './utilities/helpers';
 export default class System
 {
     private _messageBus: MessageBus;
-    private _restServer: HttpServer;
+    private _httpServer: HttpServer;
     private _services: ServiceRepository;
 
     constructor()
     {
         this._messageBus = new MessageBus(process.env.CLIENT_ID, process.env.GROUP_ID, [process.env.KAFKA_BOOTSTRAP_SERVER]);
-        this._restServer = new HttpServer();
+        this._httpServer = new HttpServer();
         this._services = new ServiceRepository();
     }
 
@@ -34,7 +34,7 @@ export default class System
                  */
                 context._messageBus.onConnect(() => {
                     // let the service registry know that a new micro-service is online
-                    console.log('let other service registry instances know we are online');
+                    // console.log('let other service registry instances know we are online');
                     context._messageBus.sendEvent('service-registry', 'SERVICE_ONLINE', {
                         instanceId: process.env.INSTANCE_ID,
                         serviceId: process.env.SERVICE_ID,
@@ -93,7 +93,7 @@ export default class System
                 /**
                  * When a request is sent to the rest server for list of services
                  */
-                context._restServer.on('get', '/services', async (req, res) => {
+                context._httpServer.on('get', '/services', async (req, res) => {
                     const allServices = await context._services.getAll();
 
                     return res.status(200).json(allServices);
@@ -112,7 +112,7 @@ export default class System
                  */
                 if(process.env.REST_SERVER !== 'false') {
                     console.log('System: starting http server');
-                    context._restServer.start(process.env.REST_PORT);
+                    context._httpServer.start(process.env.REST_PORT);
                 }
 
                 resolve(true);
@@ -128,8 +128,8 @@ export default class System
                 context._messageBus.connect();
 
                 console.log('System: starting http server...');
-                context._restServer.stop();
-                context._restServer.start(process.env.REST_PORT);
+                context._httpServer.stop();
+                context._httpServer.start(process.env.REST_PORT);
 
                 resolve(false);
             }
@@ -138,6 +138,26 @@ export default class System
 
     async stop()
     {
+        try {
+            // let the service registry know that a micro-service is offline
+            console.log('System: updating service registry (SERVICE_OFFLINE)...');
+            await this._messageBus.sendEvent('service-registry', 'SERVICE_OFFLINE', {
+                instanceId: process.env.INSTANCE_ID,
+                serviceId:  process.env.SERVICE_ID
+            });
+            console.log('System: service registry updated');
 
+            console.log('System: stopping http server...');
+            this._httpServer.stop();
+            console.log('System: http server stopped');
+
+            console.log('System: disconnecting from message bus...');
+            await this._messageBus.disconnect();
+            console.log('System: disconnected from message bus');
+        }
+        catch(err) {
+            console.log('System error: ', err);
+            return;
+        }
     }
 }
