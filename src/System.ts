@@ -40,7 +40,7 @@ export default class System
                         serviceId: process.env.SERVICE_ID,
                         supportedCommunicationChannels: ['rest', 'bus'],
                         hostname: 'registry-proxy',
-                        port: 8003,
+                        port: 7000,
                         endpoints: [
                             {
                                 url: '/services',
